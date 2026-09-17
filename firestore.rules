@@ -1,0 +1,144 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isFounderAccount() {
+      return isAuthenticated() && (
+        request.auth.uid == 'vpnedgte3ESqRQyp5RAGkBaqN3d2' ||
+        (request.auth.token.email != null && request.auth.token.email == '1.1.1.theoneandonlyusername.1.1.1@gmail.com')
+      );
+    }
+    
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+    
+    function hasRole(role) {
+      return isAuthenticated() && (
+        isFounderAccount() ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+         getUserData().role == role)
+      );
+    }
+    
+    function isStaff() {
+      return isAuthenticated() && (
+        isFounderAccount() ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+         getUserData().role in ['founder', 'admin', 'moderator'])
+      );
+    }
+
+    // System Config
+    match /systemConfig/{configId} {
+      allow read: if true;
+      allow write: if isStaff();
+    }
+
+    // Registration Accounts
+    match /registrationAccounts/{accountId} {
+      allow read: if true;
+      allow write: if isAuthenticated() && (request.auth.uid == accountId || isStaff());
+    }
+
+    // Users Collection
+    match /users/{userId} {
+      allow read: if true;
+      allow create: if isAuthenticated() && (request.auth.uid == userId || isStaff());
+      allow update: if isAuthenticated() && (
+        request.auth.uid == userId || 
+        isStaff()
+      );
+      allow delete: if isStaff();
+    }
+
+    // Posts Collection
+    match /posts/{postId} {
+      allow read: if true;
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && (
+        resource.data.authorId == request.auth.uid || 
+        isStaff() ||
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['upvotes', 'downvotes', 'commentsCount', 'sharesCount'])
+      );
+      allow delete: if isAuthenticated() && (
+        resource.data.authorId == request.auth.uid || 
+        isStaff()
+      );
+    }
+
+    // Comments Collection
+    match /comments/{commentId} {
+      allow read: if true;
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && (
+        resource.data.authorId == request.auth.uid || 
+        isStaff()
+      );
+      allow delete: if isAuthenticated() && (
+        resource.data.authorId == request.auth.uid || 
+        isStaff()
+      );
+    }
+
+    // Direct Messages
+    match /messages/{messageId} {
+      allow read: if isAuthenticated() && (
+        resource.data.senderId == request.auth.uid || 
+        resource.data.recipientId == request.auth.uid ||
+        isStaff()
+      );
+      allow create: if isAuthenticated() && request.resource.data.senderId == request.auth.uid;
+      allow update: if isAuthenticated() && (
+        resource.data.senderId == request.auth.uid || 
+        resource.data.recipientId == request.auth.uid
+      );
+      allow delete: if isAuthenticated() && (
+        resource.data.senderId == request.auth.uid || 
+        isStaff()
+      );
+    }
+
+    // Moderation Reports
+    match /reports/{reportId} {
+      allow read: if isStaff() || (isAuthenticated() && resource.data.reporterId == request.auth.uid);
+      allow create: if isAuthenticated();
+      allow update, delete: if isStaff();
+    }
+
+    // Notifications
+    match /notifications/{notificationId} {
+      allow read: if isAuthenticated() && (resource.data.recipientId == request.auth.uid || resource.data.userId == request.auth.uid);
+      allow create: if isAuthenticated();
+      allow update, delete: if isAuthenticated() && (resource.data.recipientId == request.auth.uid || resource.data.userId == request.auth.uid || isStaff());
+    }
+
+    // Community Announcements
+    match /communityAnnouncements/{announcementId} {
+      allow read: if true;
+      allow write: if isStaff();
+    }
+
+    // Support Tickets
+    match /supportTickets/{ticketId} {
+      allow read: if true;
+      allow create: if true;
+      allow update, delete: if isStaff() || true;
+    }
+
+    // Support Audit Logs
+    match /supportAuditLogs/{logId} {
+      allow read: if isStaff();
+      allow write: if true;
+    }
+  }
+}

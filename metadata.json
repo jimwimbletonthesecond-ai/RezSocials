@@ -1,0 +1,8 @@
+{
+  "name": "RezSocials",
+  "description": "RezSocials is an unofficial, community-made social media platform created for the Rezona community.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

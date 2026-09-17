@@ -1,0 +1,44 @@
+{
+  "entities": {
+    "users": {
+      "title": "User",
+      "description": "User profile data including role, badges, and verification status"
+    },
+    "posts": {
+      "title": "Post",
+      "description": "Community posts with rich media, tags, votes, and comments"
+    },
+    "comments": {
+      "title": "Comment",
+      "description": "User comments on posts"
+    },
+    "messages": {
+      "title": "Message",
+      "description": "Direct messages between users"
+    },
+    "reports": {
+      "title": "Report",
+      "description": "Content reports for staff review"
+    },
+    "notifications": {
+      "title": "Notification",
+      "description": "User system notifications"
+    },
+    "communityAnnouncements": {
+      "title": "CommunityAnnouncement",
+      "description": "Official community announcements"
+    },
+    "supportTickets": {
+      "title": "SupportTicket",
+      "description": "Support tickets submitted by users"
+    },
+    "supportAuditLogs": {
+      "title": "SupportAuditLog",
+      "description": "Audit trail for support actions"
+    },
+    "systemConfig": {
+      "title": "SystemConfig",
+      "description": "Global system configurations like founder lock and registration count"
+    }
+  }
+}
